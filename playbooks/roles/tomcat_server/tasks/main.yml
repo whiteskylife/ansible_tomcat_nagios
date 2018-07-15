@@ -1,0 +1,35 @@
+- name: 1.确保/data/apache-tomcat路径存在
+  shell: "[ -d /data/apache-tomcat ] ||  /bin/mkdir  /data/apache-tomcat -p"
+
+- name: 2.确认{{project}}是新项目
+  shell: "( [ ! -d {{proname_path}}  ] &&  [ ! -d /data/wwwroot/{{project}} ] ) || exit 3 "
+#- name: 2.确认{{project}}是新项目
+#  shell: "( [ ! -d {{proname_path}}  ] &&  [ ! -d /data/wwwroot/{{project}} ] ) || exit 3 "
+
+#- name: 3.copy and unzip tomcat
+#  unarchive: src=apache-tomcat-7.0.82.zip dest={{proname_path}}
+
+- name: 3.发送tomcat文件
+  copy: src="apache-tomcat-7.0.82.zip" dest=/data/apache-tomcat/ 
+
+- name: 4.解压tomcat文件
+  shell: chdir=/data/apache-tomcat  /usr/bin/unzip /data/apache-tomcat/apache-tomcat-7.0.82.zip  -d {{proname_path}}
+
+- name: 5.修改文件权限
+  shell: chdir=/data/apache-tomcat  /bin/chmod -R 750 {{proname_path}} ;/bin/chmod -R 770 {{proname_path}}/{logs,temp,work}; /bin/chown -R root.gxy_tomcat {{proname_path}}
+
+- name: 6.替换server.xml
+  template: src=server.xml  dest={{proname_path}}/conf/server.xml owner=root  group=gxy_tomcat mode=750
+
+- name: 7.替换catalina.sh
+  template: src=catalina.sh  dest={{proname_path}}/bin/catalina.sh  owner=root  group=gxy_tomcat mode=750
+
+- name: 8.替换run.sh
+  template: src=run.sh  dest={{proname_path}}/bin/run.sh  owner=root  group=gxy_tomcat mode=750
+
+- name: 9.建立/data/wwwroot/{{project}}文件夹
+  shell: "[ ! -d /data/wwwroot/{{project}} ]  &&  /bin/mkdir  /data/wwwroot/{{project}} -p"
+
+- name: 10.建立check_gxy.jsp文件
+  template: src=check_gxy.jsp  dest=/data/wwwroot/{{project}}/check_gxy.jsp owner=root group=gxy_tomcat mode=750
+
